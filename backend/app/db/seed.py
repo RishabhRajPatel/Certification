@@ -58,18 +58,21 @@ SEEDS = [
 def seed() -> None:
     create_db_and_tables()
     with Session(engine) as db:
-        # Settings
+        # Settings — only populated on first creation; an admin's later edits via
+        # the Settings page must survive redeploys/restarts, not get overwritten.
         s = db.get(Setting, "app")
         if not s:
-            s = Setting(id="app")
-        s.company_name = "Maayad Infotech Pvt. Ltd."
-        s.company_email = "maayadinfotech@gmail.com"
-        s.company_phone = "+91 84710 82642"
-        s.company_website = "https://maayad.com"
-        s.company_address = "REGD. OFFICE: HOUSE NO. 169, BEHIND SHOPING CENTRE, SHASTRI NAGAR (AJMER), AJMER, RAJASTHAN – 305001"
-        s.signature_name = "Rishabh Raj Patel"
-        s.signature_designation = "Head of Human Resources"
-        db.add(s)
+            s = Setting(
+                id="app",
+                company_name="Maayad Infotech Pvt. Ltd.",
+                company_email="maayadinfotech@gmail.com",
+                company_phone="+91 84710 82642",
+                company_website="https://maayad.com",
+                company_address="REGD. OFFICE: HOUSE NO. 169, BEHIND SHOPING CENTRE, SHASTRI NAGAR (AJMER), AJMER, RAJASTHAN – 305001",
+                signature_name="Rishabh Raj Patel",
+                signature_designation="Head of Human Resources",
+            )
+            db.add(s)
 
         # Templates
         for t in OFFER_TEMPLATES:
@@ -93,6 +96,10 @@ def seed() -> None:
             db.add(admin)
         db.commit()
         print(f"👤 Admin ready → {email} / {cfg.SEED_ADMIN_PASSWORD}")
+
+        if not cfg.SEED_DEMO_DATA:
+            print("ℹ️  SEED_DEMO_DATA is off — skipping demo interns/offers/certificates.")
+            return
 
         # Reset sample data
         for M in (Document, Certificate, OfferLetter, ProgressTask, Intern, Counter):

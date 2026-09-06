@@ -2,8 +2,9 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_COOKIE } from "./auth";
+import { withScheme } from "./utils";
 
-const BASE = (process.env.BACKEND_URL || "http://localhost:8000").replace(/\/$/, "");
+const BASE = withScheme(process.env.BACKEND_URL || "http://localhost:8000").replace(/\/$/, "");
 const API = `${BASE}/api/v1`;
 
 // ── case conversion ────────────────────────────────────────────

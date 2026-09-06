@@ -36,17 +36,39 @@ class Settings(BaseSettings):
     SEED_ADMIN_PASSWORD: str = "Admin@12345"
     SEED_ADMIN_NAME: str = "System Administrator"
 
+    # False on every automated boot in production — the seed script's demo-data
+    # reset deletes all interns/certificates/offers unconditionally, which is
+    # fine for local dev but must never run against a live database.
+    SEED_DEMO_DATA: bool = True
+
     @property
     def is_production(self) -> bool:
         return self.ENV.lower() == "production"
 
     @property
+    def database_url(self) -> str:
+        # Render/Heroku-style Postgres URLs come as "postgres://" or a driverless
+        # "postgresql://" — SQLAlchemy needs an explicit DBAPI, so pin psycopg.
+        url = self.DATABASE_URL
+        if url.startswith("postgres://"):
+            return "postgresql+psycopg://" + url[len("postgres://"):]
+        if url.startswith("postgresql://"):
+            return "postgresql+psycopg://" + url[len("postgresql://"):]
+        return url
+
+    @staticmethod
+    def _with_scheme(url: str) -> str:
+        # Render's `fromService` blueprint var injects a bare hostname with no
+        # scheme — assume https so the value is still a usable origin/URL.
+        return url if url.startswith(("http://", "https://")) else f"https://{url}"
+
+    @property
     def cors_origins_list(self) -> list[str]:
-        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+        return [self._with_scheme(o.strip()) for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     @property
     def app_url(self) -> str:
-        return self.APP_URL.rstrip("/")
+        return self._with_scheme(self.APP_URL).rstrip("/")
 
 
 _INSECURE_AUTH_SECRETS = {

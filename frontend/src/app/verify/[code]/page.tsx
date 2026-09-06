@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { apiRaw, toCamel } from "@/lib/api";
 import type { Verify } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, withScheme } from "@/lib/utils";
 import { ShareVerification } from "@/components/share-verification";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-const APP_URL = (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+const APP_URL = withScheme(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
 
 function formatDateTime(d: Date): string {
   return d.toLocaleString("en-GB", {

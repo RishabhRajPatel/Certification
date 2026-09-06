@@ -5,6 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Some hosts (Render's `fromService` blueprint var) inject a bare hostname
+ * with no scheme — assume https so the value is still a usable URL. */
+export function withScheme(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 /** Resolves a backend-relative asset path (e.g. "/media/templates/x.png",
  * from Template.backgroundUrl) into a URL the browser can actually fetch.
  * The backend and frontend run on different origins, so a bare "/media/..."
@@ -13,7 +19,7 @@ export function cn(...inputs: ClassValue[]) {
 export function mediaUrl(path: string | null | undefined): string | undefined {
   if (!path) return undefined;
   if (/^https?:\/\//i.test(path)) return path;
-  const base = (process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000").replace(/\/$/, "");
+  const base = withScheme(process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000").replace(/\/$/, "");
   return `${base}${path}`;
 }
 

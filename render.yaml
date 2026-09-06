@@ -1,0 +1,68 @@
+databases:
+  - name: certifypro-db
+    plan: free
+    databaseName: certifypro
+    user: certifypro
+
+services:
+  - type: web
+    name: certifypro-backend
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: certifypro-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_HOURS
+        value: "8"
+      - key: SEED_ADMIN_EMAIL
+        value: admin@maayad.com
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_ADMIN_NAME
+        value: System Administrator
+      - key: SEED_DEMO_DATA
+        value: "false"
+      - key: APP_URL
+        fromService:
+          type: web
+          name: certifypro-frontend
+          property: host
+      - key: CORS_ORIGINS
+        fromService:
+          type: web
+          name: certifypro-frontend
+          property: host
+
+  - type: web
+    name: certifypro-frontend
+    runtime: docker
+    plan: free
+    rootDir: frontend
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: certifypro-backend
+          property: host
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromService:
+          type: web
+          name: certifypro-backend
+          property: host
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          type: web
+          name: certifypro-frontend
+          property: host
+      - key: NEXT_PUBLIC_COMPANY_NAME
+        value: Maayad Infotech Pvt. Ltd.
