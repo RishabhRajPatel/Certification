@@ -1,0 +1,22 @@
+# dependencies / builds
+node_modules/
+.next/
+.venv/
+.ven/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tsconfig.tsbuildinfo
+
+# databases
+*.db
+*.db-journal
+
+# env / secrets
+.env
+..env
+.env*.local
+
+# os
+.DS_Store

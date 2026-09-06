@@ -1,0 +1,39 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      APP_NAME: "Maayad API"
+      ENV: "production"
+      DATABASE_URL: "sqlite:////data/maayad.db"
+      # Required — no insecure default. Set in a git-ignored .env next to this
+      # file (or your orchestrator's secret store). Generate with:
+      #   openssl rand -hex 32
+      AUTH_SECRET: "${AUTH_SECRET:?set AUTH_SECRET in .env — see .env.example}"
+      ACCESS_TOKEN_EXPIRE_HOURS: "8"
+      APP_URL: "http://localhost:3000"
+      CORS_ORIGINS: "http://localhost:3000"
+      SEED_ADMIN_EMAIL: "admin@maayad.com"
+      SEED_ADMIN_PASSWORD: "${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD in .env — see .env.example}"
+      SEED_ADMIN_NAME: "System Administrator"
+    volumes:
+      - maayad_data:/data
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    environment:
+      BACKEND_URL: "http://backend:8000"
+      # Browser-reachable backend URL, for loading /media/... assets (template
+      # backgrounds) directly — the internal "http://backend:8000" DNS name
+      # above only resolves inside the Docker network, not in the user's browser.
+      NEXT_PUBLIC_BACKEND_URL: "http://localhost:8000"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      NEXT_PUBLIC_COMPANY_NAME: "Maayad Infotech Pvt. Ltd."
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  maayad_data:
