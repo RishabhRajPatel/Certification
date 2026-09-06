@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ShieldCheck, ShieldX, ShieldAlert, Building2, Award, BadgeCheck,
   KeyRound, QrCode, Fingerprint, CalendarCheck, Clock,
@@ -129,10 +128,6 @@ export default async function VerifyPage({ params }: { params: Promise<{ code: s
               </p>
             </div>
           </div>
-
-          <p className="mt-4 text-center text-xs text-slate-400">
-            Are you an administrator? <Link href="/login" className="font-medium text-brand-700 hover:underline">Sign in</Link>
-          </p>
         </div>
       </div>
     );
@@ -265,10 +260,6 @@ export default async function VerifyPage({ params }: { params: Promise<{ code: s
             Official Certificate Verification System · © {new Date().getFullYear()} {companyName}
           </p>
         </div>
-
-        <p className="mt-4 text-center text-xs text-slate-400">
-          Are you an administrator? <Link href="/login" className="font-medium text-brand-700 hover:underline">Sign in</Link>
-        </p>
       </div>
     </div>
   );
