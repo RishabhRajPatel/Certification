@@ -33,7 +33,10 @@ const nextConfig = {
   poweredByHeader: false,
   // Self-contained server bundle (only the deps actually used at runtime,
   // not the full node_modules) — smaller/faster Docker image. See Dockerfile.
-  output: "standalone",
+  // Vercel has its own serverless output format and this conflicts with it
+  // (breaks the build with an ENOENT on next-server.js.nft.json), so only
+  // apply it for Docker builds — Vercel sets VERCEL=1 during its own builds.
+  ...(process.env.VERCEL ? {} : { output: "standalone" }),
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
