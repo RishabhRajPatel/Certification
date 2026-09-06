@@ -2,6 +2,7 @@ from datetime import datetime
 from io import BytesIO
 from xml.sax.saxutils import escape as _esc
 
+import httpx
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape
@@ -19,6 +20,20 @@ from app.services.qr import qr_png_bytes
 
 def _fmt(d: datetime) -> str:
     return d.strftime("%d %b %Y")
+
+
+def _fetch_image(url: str | None, timeout: float = 5.0) -> ImageReader | None:
+    """Best-effort fetch of an admin-supplied image URL (company stamp, etc.)
+    for embedding in the PDF. Never raises — a slow/broken URL should degrade
+    to the built-in placeholder, not fail certificate generation."""
+    if not url:
+        return None
+    try:
+        resp = httpx.get(url, timeout=timeout)
+        resp.raise_for_status()
+        return ImageReader(BytesIO(resp.content))
+    except Exception:
+        return None
 
 
 def default_certificate_text(cert: Certificate, intern: Intern, settings: Setting) -> str:
@@ -181,15 +196,24 @@ def build_certificate_pdf(
     c.drawCentredString(qx + qr_size / 2, base_y - 4 * mm, "Scan to verify authenticity")
     c.drawCentredString(qx + qr_size / 2, base_y - 7 * mm, cert.number)
 
-    # seal (center)
+    # seal (center) — real stamp image if the admin has set one, else the
+    # built-in placeholder circle.
     seal_y = base_y + 12 * mm
-    c.setStrokeColor(accent)
-    c.setLineWidth(2)
-    c.circle(cx, seal_y, 13 * mm)
-    c.setFillColor(accent)
-    c.setFont("Helvetica-Bold", 7)
-    c.drawCentredString(cx, seal_y + 1 * mm, "OFFICIAL")
-    c.drawCentredString(cx, seal_y - 4 * mm, "SEAL")
+    seal_img = _fetch_image(settings.stamp_image_url)
+    if seal_img:
+        seal_size = 26 * mm
+        c.drawImage(
+            seal_img, cx - seal_size / 2, seal_y - seal_size / 2, seal_size, seal_size,
+            mask="auto", preserveAspectRatio=True,
+        )
+    else:
+        c.setStrokeColor(accent)
+        c.setLineWidth(2)
+        c.circle(cx, seal_y, 13 * mm)
+        c.setFillColor(accent)
+        c.setFont("Helvetica-Bold", 7)
+        c.drawCentredString(cx, seal_y + 1 * mm, "OFFICIAL")
+        c.drawCentredString(cx, seal_y - 4 * mm, "SEAL")
 
     # signature (right)
     sig_cx = W - im - 40 * mm
